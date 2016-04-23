@@ -18,10 +18,22 @@ int nombreExistDansTab(int T[], int valeur, int taille) {
 	return 0;
 }
 
+void initialiserGrille(int Grille[N][N], int taille)
+{
+	int i,j;
+	for(i=0; i < taille; i++)
+	{
+		for(j=0; j < taille; j++)
+		{
+			Grille[i][j] = -1 ;
+		}
+	}
+}
+
 /**Generer les valeurs de la grille c'est-à-dire la moitié des valeurs
 	qui seront ensuite dupliqué
 */
-int genererValeursGril(int tabValGenerer[], int nbValeurs) {
+int genererValeursGrille(int tabValGenerer[], int nbValeurs) {
 	int i=0;
 	int nombre;
 	srand(time(NULL));
@@ -43,7 +55,58 @@ void afficherTableau(int T[], int taille) {
 		printf("%5d",T[i]);
 	}
 }
+
 void afficherMatrice(int M[N][N], int taille) {
+	int i,j;
+	printf("\t    ");
+	for(i=0; i< taille; i++)
+	{
+		printf("%5d", i+1);
+	}
+	printf("\n\t%4c ",' ');
+	for(i=0; i< (5*taille+2); i++)
+	{
+		printf("%c",'=');
+	}
+	//printf("\n");
+	printf("\n\t%3c||",' ');
+	for(i=0; i< (5*taille); i++)
+	{
+		printf("%c",' ');
+	}
+	printf("  ||\n");
+	
+	for(i=0; i<taille; i++)
+	{
+		printf("\t%2d ||", i+1);
+		for(j=0; j<taille; j++) 
+		{
+			printf("%5d",M[i][j]);
+		}
+		printf("  || %d\n\t%3c||", i+1, ' ');
+		for(j=0; j<taille; j++) 
+		{
+			printf("%5c",' ');
+		}
+		printf("  ||\n");
+	}
+	
+	
+	printf("\t%4c ",' ');
+	for(i=0; i< (5*taille+2); i++)
+	{
+		printf("%c",'=');
+	}
+	printf("\n\t    ");
+	for(i=0; i< taille; i++)
+	{
+		printf("%5d", i+1);
+	}
+	printf("\n");
+	
+}
+
+void afficherGrille(int M[N][N], int taille) {
 	int i,j;
 	for(i=0; i<taille; i++) {
 		for(j=0; j<taille; j++) {
@@ -72,39 +135,6 @@ int valeurExistDansInterval(int T[], int debut, int fin, int val)
 	c'est-à-dire sur chaque ligne on générer (LongueurLigne/2) indices
 	
 **/
-/*void generIndiceGrille(int tabIndice[][], int nbLignCol)
-{
-	int i,j,k,l;
-	int nombre;
-	int indiceLigne[nbLignCol/2];
-	k=0;
-	srand(time(NULL));
-	for(i=0;i<nbLignCol;i++)
-	{
-		for(l=0;l<nbLignCol/2;l++)
-		{
-			indiceLigne[l] = -1;//mettre toutes les cases -1 pour une future comparaison
-		}
-		j=0;
-		while(j<nbLignCol/2) 
-		{
-			nombre = rand()%nbLignCol;
-			if(nombreExistDansTab(indiceLigne, nombre,j) == 0)
-			{
-				indiceLigne[j] = nombre;
-				j++;
-			}
-		}
-		//copy des indices de la ligne i
-		for(l=0;l<nbLignCol/2;l++)
-		{
-			tabIndice[k++]=indiceLigne[l];
-		}
-		/*afficherTableau(indiceLigne,j);
-		printf("fin\n");*/
-/*	}
-}*/
-
 void generIndiceGrille(int indiceGenParLign[N][N], int nbLignCol)
 {
 	int nombre, ligne, col;	
@@ -124,41 +154,92 @@ void generIndiceGrille(int indiceGenParLign[N][N], int nbLignCol)
 	}
 }
 
-void genererGrille(int Grille[N][N], int valeursGrille[], int indicesGenererParLigne[], int nbLigneCol,  int taille)
+/**
+	Melanger les valeurs de la grille 
+**/
+void melangerValeurGrille(int *valeursGrille, int taille)
 {
-	int i,j;
-	int k=0;//indice du tableau valeurs[]
-	for(i=0;i<nbLigneCol;i++)
+	int i,j, tmp;
+	int trie = 0;
+	while(trie == 0)
 	{
-		for(j=0;j<nbLigneCol;j++)
+		trie = 1;
+		for(i = 0; i < taille - 1; i++)	
 		{
-			if(valeurExistDansInterval(valeursGrille,k,k+4,j) == 1)
+			if(valeursGrille[i] > valeursGrille[i+1])
 			{
-				printf("%d existe \n",j);
+				tmp = valeursGrille[i];
+				valeursGrille[i] = valeursGrille[i+1];
+				valeursGrille[i+1] = tmp;
+				trie = 0;
 			}
+		}
+	}
+}
+
+/**
+	Generer la grille finale pour le jeu !
+**/
+void genererGrille(int grille[N][N], int indicesGenererParLigne[N][N], int valeursGrille[], int nbLigneCol,  int tailValGril)
+{
+	int ligneG, colG;
+	int k;
+	int indTabIndice, indValGril, indCourant;
+	
+	//Remplir la moitié des cases de la grille
+	k=0;
+	for(colG=0;colG<nbLigneCol;colG++)
+	{
+		for(ligneG=0;ligneG<nbLigneCol/2;ligneG++) //la moitié de la ligne
+		{
+			indCourant = indicesGenererParLigne[colG][ligneG];
+			//prendre les indices de la ligne dans le tableau indicesGenererParLigne
+			grille[colG][indCourant] = valeursGrille[k++];
 				
 		}
 	}
+	/*	l'afficher ic avant d'appler la foncion melanger
+	printf("\n===Tableau des Valeurs de la grille a dupliquer===\n\n");
+	afficherTableau(valeursGrille, tailValGril);*/
+	//Remplir l'autre moitié, il faut melanger les valeurs d'abord
+	melangerValeurGrille(valeursGrille, tailValGril);
+	//k=0;
+	for(colG=0;colG<nbLigneCol;colG++)
+	{
+		for(ligneG=0;ligneG<nbLigneCol;ligneG++) 
+		{
+			if(grille[colG][ligneG] == -1 )
+			{
+				grille[colG][ligneG] = valeursGrille[--k];
+			}
+		}
+	}
+	/*printf("\n===Matrice des Indices générés===\n\n");
+	afficherMatrice(indicesGenererParLigne, nbLigneCol);*/	
+	/*printf("\n===Tableau des Valeurs de la grille trier===\n\n");
+	afficherTableau(valeursGrille, tailValGril);*/	
+	printf("\n\n===Grille finale===\n\n");
+	printf("\n\n");
+	afficherMatrice(grille, nbLigneCol);
+	
 	
 }
+
 int main() {
 	int i,j,x,nbValGrille;
-	int Grille[N][N];
+	int grille[N][N];
 	int T [N];
 	int nbLigneColGrille;
 	int tabValGrilGenerer[N*N];
 	int tabIndicesGrilGenerer[N][N];
 	
 	nbLigneColGrille=8;
+	initialiserGrille(grille, nbLigneColGrille);
 	nbValGrille = nbLigneColGrille*nbLigneColGrille/2;
-	/*genererValeursGril(tabValGrilGenerer,nbValGrille);
-	afficherTableau(tabValGrilGenerer,nbValGrille);*/
+	genererValeursGrille(tabValGrilGenerer,nbValGrille);
 	generIndiceGrille(tabIndicesGrilGenerer, nbLigneColGrille);
-	afficherMatrice(tabIndicesGrilGenerer, nbLigneColGrille);
-	//printf("\n\nIndices===\n\n");
 	
-	//afficherTableau(T,n*(n/2));
-	//genererGrille(Grille,n,nbValGenerer,T,n*(n/2));
+	genererGrille(grille, tabIndicesGrilGenerer, tabValGrilGenerer, nbLigneColGrille, nbValGrille);
 	
 	
 	
